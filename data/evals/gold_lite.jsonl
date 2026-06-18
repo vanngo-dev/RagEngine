@@ -1,1 +1,10 @@
-{"id":"q001","question":"What is this document about?","expected_chunk_ids":["example_chunk"],"top_k":5}
+{"id":"q001","question":"What is this document about?","expected_chunk_ids":["example_chunk_001"],"top_k":5}
+{"id":"q002","question":"What section explains the policy?","expected_chunk_ids":["example_chunk_002"],"top_k":5}
+{"id":"q003","question":"What risk factors are mentioned?","expected_chunk_ids":["example_chunk_003"],"top_k":5}
+{"id":"q004","question":"What does the overview say?","expected_chunk_ids":["example_chunk_004"],"top_k":5}
+{"id":"q005","question":"What is the document type?","expected_chunk_ids":["example_chunk_005"],"top_k":5}
+{"id":"q006","question":"Which source discusses supply chain risk?","expected_chunk_ids":["example_chunk_006"],"top_k":5}
+{"id":"q007","question":"What topic is covered in the introduction?","expected_chunk_ids":["example_chunk_007"],"top_k":5}
+{"id":"q008","question":"What document talks about local retrieval?","expected_chunk_ids":["example_chunk_008"],"top_k":5}
+{"id":"q009","question":"What evidence supports the answer?","expected_chunk_ids":["example_chunk_009"],"top_k":5}
+{"id":"q010","question":"Which chunk should answer a basic summary question?","expected_chunk_ids":["example_chunk_010"],"top_k":5}

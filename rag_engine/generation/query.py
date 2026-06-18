@@ -18,11 +18,36 @@ def answer_question(
     llm_provider: LLMProvider,
     top_k: int = 5,
 ) -> dict:
+    trace = debug_question(
+        question=question,
+        vector_index=vector_index,
+        embedding_provider=embedding_provider,
+        llm_provider=llm_provider,
+        top_k=top_k,
+    )
+
+    return {
+        "answer": trace["answer"],
+        "citations": trace["citations"],
+    }
+
+
+def debug_question(
+    question: str,
+    vector_index: SQLiteVectorIndex,
+    embedding_provider: EmbeddingProvider,
+    llm_provider: LLMProvider,
+    top_k: int = 5,
+) -> dict:
     query_vector = embedding_provider.embed_text(question)
     vector_results = vector_index.search(query_vector, top_k=top_k)
 
     if not vector_results or vector_results[0]["score"] <= 0:
         return {
+            "question": question,
+            "vector_results": vector_results,
+            "selected_context": "",
+            "prompt_preview": "",
             "answer": REFUSAL_ANSWER,
             "citations": [],
         }
@@ -33,9 +58,20 @@ def answer_question(
     citations = extract_citations(answer, context_payload["sources"])
 
     return {
+        "question": question,
+        "vector_results": vector_results,
+        "selected_context": context_payload["context"],
+        "prompt_preview": bounded_prompt_preview(prompt),
         "answer": answer,
         "citations": citations,
     }
+
+
+def bounded_prompt_preview(prompt: str, limit: int = 1000) -> str:
+    if len(prompt) <= limit:
+        return prompt
+
+    return f"{prompt[:limit]}..."
 
 
 def extract_citations(answer: str, sources: list[dict]) -> list[dict]:

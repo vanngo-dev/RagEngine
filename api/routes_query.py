@@ -8,7 +8,7 @@ from app.dependencies import (
     get_app_settings,
 )
 from rag_engine.generation.llm import LLMProvider
-from rag_engine.generation.query import answer_question
+from rag_engine.generation.query import answer_question, debug_question
 from rag_engine.retrieval.embeddings import EmbeddingProvider
 from rag_engine.retrieval.vector_index import SQLiteVectorIndex
 
@@ -33,6 +33,22 @@ def query(
     llm_provider: LLMProvider = Depends(get_app_llm_provider),
 ) -> dict:
     return answer_question(
+        question=request.question,
+        vector_index=vector_index,
+        embedding_provider=embedding_provider,
+        llm_provider=llm_provider,
+        top_k=request.top_k,
+    )
+
+
+@router.post("/query/debug")
+def query_debug(
+    request: QueryRequest,
+    vector_index: SQLiteVectorIndex = Depends(get_vector_index),
+    embedding_provider: EmbeddingProvider = Depends(get_app_embedding_provider),
+    llm_provider: LLMProvider = Depends(get_app_llm_provider),
+) -> dict:
+    return debug_question(
         question=request.question,
         vector_index=vector_index,
         embedding_provider=embedding_provider,
