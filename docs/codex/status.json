@@ -1,0 +1,72 @@
+{
+  "project": "robust-local-rag-engine-v3",
+  "stack": "local-lite-first",
+  "current_slice": 0,
+  "slices": [
+    {
+      "id": 0,
+      "name": "project-foundation",
+      "status": "pending"
+    },
+    {
+      "id": 1,
+      "name": "document-pipeline",
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "name": "searchable-rag",
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "name": "answer-citations",
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "name": "eval-debug",
+      "status": "pending"
+    },
+    {
+      "id": 5,
+      "name": "hybrid-rrf",
+      "status": "pending"
+    },
+    {
+      "id": 6,
+      "name": "metadata-supersession",
+      "status": "pending"
+    },
+    {
+      "id": 7,
+      "name": "reranker-evidence",
+      "status": "pending"
+    },
+    {
+      "id": 8,
+      "name": "prompt-injection-defense",
+      "status": "pending"
+    },
+    {
+      "id": 9,
+      "name": "claim-verification",
+      "status": "pending"
+    },
+    {
+      "id": 10,
+      "name": "confidence-refusal",
+      "status": "pending"
+    },
+    {
+      "id": 11,
+      "name": "full-eval-harness",
+      "status": "pending"
+    },
+    {
+      "id": 12,
+      "name": "production-adapter-interfaces",
+      "status": "pending"
+    }
+  ]
+}
