@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     chunk_max_tokens: int = Field(default=180, alias="CHUNK_MAX_TOKENS")
     embedding_provider: str = Field(default="fake", alias="EMBEDDING_PROVIDER")
     llm_provider: str = Field(default="mock", alias="LLM_PROVIDER")
+    reranker_provider: str = Field(default="mock", alias="RERANKER_PROVIDER")
     ollama_base_url: str = Field(
         default="http://localhost:11434",
         alias="OLLAMA_BASE_URL",
