@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     raw_data_dir: Path = Field(default=Path("data/raw"), alias="RAW_DATA_DIR")
     chunk_max_tokens: int = Field(default=180, alias="CHUNK_MAX_TOKENS")
     embedding_provider: str = Field(default="fake", alias="EMBEDDING_PROVIDER")
+    llm_provider: str = Field(default="mock", alias="LLM_PROVIDER")
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        alias="OLLAMA_BASE_URL",
+    )
+    ollama_model: str = Field(default="llama3.1", alias="OLLAMA_MODEL")
 
     model_config = SettingsConfigDict(
         env_file=".env",
