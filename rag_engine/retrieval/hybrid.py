@@ -47,10 +47,23 @@ def hybrid_search(
     vector_index: SQLiteVectorIndex,
     keyword_index: SQLiteKeywordIndex,
     embedding_provider: EmbeddingProvider,
+    include_superseded: bool = False,
+    filters: dict[str, str] | None = None,
 ) -> list[dict]:
-    keyword_results = keyword_index.search(query, top_k=50)
+    filters = filters or {}
+    keyword_results = keyword_index.search(
+        query,
+        top_k=50,
+        include_superseded=include_superseded,
+        filters=filters,
+    )
     query_vector = embedding_provider.embed_text(query)
-    vector_results = vector_index.search(query_vector, top_k=50)
+    vector_results = vector_index.search(
+        query_vector,
+        top_k=50,
+        include_superseded=include_superseded,
+        filters=filters,
+    )
 
     return reciprocal_rank_fusion(
         {

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from pydantic import BaseModel
 
 from app.config import Settings
 from app.dependencies import get_app_embedding_provider, get_app_settings
@@ -23,11 +24,23 @@ def get_vector_index(settings: Settings = Depends(get_app_settings)) -> SQLiteVe
 @router.post("/upload")
 async def upload_document(
     file: UploadFile,
+    entity: str | None = Form(default=None),
+    document_type: str | None = Form(default=None),
+    document_date: str | None = Form(default=None),
+    document_family_id: str | None = Form(default=None),
     settings: Settings = Depends(get_app_settings),
     store: SQLiteDocumentStore = Depends(get_store),
 ) -> dict:
     try:
-        result = await ingest_upload(file, settings, store)
+        result = await ingest_upload(
+            file=file,
+            settings=settings,
+            store=store,
+            entity=entity,
+            document_type=document_type,
+            document_date=document_date,
+            document_family_id=document_family_id,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -48,6 +61,25 @@ def list_document_chunks(
         raise HTTPException(status_code=404, detail="Document not found")
 
     return {"chunks": store.list_chunks(document_id)}
+
+
+class SupersedeRequest(BaseModel):
+    new_document_id: str
+
+
+@router.post("/{document_id}/supersede")
+def supersede_document(
+    document_id: str,
+    request: SupersedeRequest,
+    store: SQLiteDocumentStore = Depends(get_store),
+) -> dict:
+    try:
+        return store.supersede_document(
+            old_document_id=document_id,
+            new_document_id=request.new_document_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/{document_id}/embed")

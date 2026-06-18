@@ -35,6 +35,7 @@ class SQLiteDocumentStore:
                 )
                 """
             )
+            self._ensure_document_columns(connection)
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS chunks (
@@ -62,6 +63,38 @@ class SQLiteDocumentStore:
             )
             connection.commit()
 
+    def _ensure_document_columns(self, connection: sqlite3.Connection) -> None:
+        existing_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(documents)").fetchall()
+        }
+        columns = {
+            "document_family_id": "TEXT",
+            "entity": "TEXT",
+            "document_type": "TEXT",
+            "document_date": "TEXT",
+            "superseded_by_document_id": "TEXT",
+        }
+
+        for column_name, column_type in columns.items():
+            if column_name not in existing_columns:
+                connection.execute(
+                    f"ALTER TABLE documents ADD COLUMN {column_name} {column_type}"
+                )
+
+        connection.execute(
+            "UPDATE documents SET document_family_id = id WHERE document_family_id IS NULL OR document_family_id = ''"
+        )
+        connection.execute(
+            "UPDATE documents SET entity = '' WHERE entity IS NULL"
+        )
+        connection.execute(
+            "UPDATE documents SET document_type = source_type WHERE document_type IS NULL OR document_type = ''"
+        )
+        connection.execute(
+            "UPDATE documents SET document_date = '' WHERE document_date IS NULL"
+        )
+
     def create_document(
         self,
         document_id: str,
@@ -71,14 +104,29 @@ class SQLiteDocumentStore:
         source_type: str,
         content_hash: str,
         status: str,
+        document_family_id: str | None = None,
+        entity: str = "",
+        document_type: str | None = None,
+        document_date: str = "",
     ) -> dict:
         with self._connect() as connection:
             connection.execute(
                 """
                 INSERT INTO documents (
-                    id, title, file_name, file_path, source_type, content_hash, status
+                    id,
+                    title,
+                    file_name,
+                    file_path,
+                    source_type,
+                    content_hash,
+                    status,
+                    document_family_id,
+                    entity,
+                    document_type,
+                    document_date,
+                    superseded_by_document_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
                 """,
                 (
                     document_id,
@@ -88,6 +136,10 @@ class SQLiteDocumentStore:
                     source_type,
                     content_hash,
                     status,
+                    document_family_id or document_id,
+                    entity,
+                    document_type or source_type,
+                    document_date,
                 ),
             )
             connection.commit()
@@ -179,3 +231,47 @@ class SQLiteDocumentStore:
             ).fetchall()
 
         return [dict(row) for row in rows]
+
+    def supersede_document(
+        self,
+        old_document_id: str,
+        new_document_id: str,
+    ) -> dict:
+        old_document = self.get_document(old_document_id)
+        if old_document is None:
+            raise ValueError("Document to supersede was not found")
+
+        new_document = self.get_document(new_document_id)
+        if new_document is None:
+            raise ValueError("Replacement document was not found")
+
+        family_id = old_document.get("document_family_id") or old_document_id
+        with self._connect() as connection:
+            connection.execute(
+                """
+                UPDATE documents
+                SET
+                    status = 'superseded',
+                    superseded_by_document_id = ?,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                WHERE id = ?
+                """,
+                (new_document_id, old_document_id),
+            )
+            connection.execute(
+                """
+                UPDATE documents
+                SET
+                    status = 'active',
+                    document_family_id = ?,
+                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                WHERE id = ?
+                """,
+                (family_id, new_document_id),
+            )
+            connection.commit()
+
+        return {
+            "superseded_document": self.get_document(old_document_id),
+            "active_document": self.get_document(new_document_id),
+        }

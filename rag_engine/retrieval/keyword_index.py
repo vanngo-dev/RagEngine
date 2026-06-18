@@ -18,14 +18,34 @@ class SQLiteKeywordIndex:
         connection.row_factory = sqlite3.Row
         return connection
 
-    def search(self, query: str, top_k: int = 10) -> list[dict]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 10,
+        include_superseded: bool = False,
+        filters: dict[str, str] | None = None,
+    ) -> list[dict]:
         fts_query = normalize_fts_query(query)
         if not fts_query:
             return []
 
+        filters = filters or {}
+        where_clauses = ["chunk_fts MATCH ?"]
+        parameters: list[str | int] = [fts_query]
+
+        if not include_superseded:
+            where_clauses.append("d.status != 'superseded'")
+
+        for column, value in filters.items():
+            where_clauses.append(f"d.{column} = ?")
+            parameters.append(value)
+
+        parameters.append(top_k)
+        where_sql = " AND ".join(where_clauses)
+
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                f"""
                 SELECT
                     f.chunk_id,
                     f.document_id,
@@ -34,15 +54,19 @@ class SQLiteKeywordIndex:
                     c.chunk_index,
                     c.token_count,
                     d.status,
+                    d.document_family_id,
+                    d.entity,
+                    d.document_type,
+                    d.document_date,
                     bm25(chunk_fts) AS rank
                 FROM chunk_fts f
                 JOIN chunks c ON c.chunk_id = f.chunk_id
                 JOIN documents d ON d.id = f.document_id
-                WHERE chunk_fts MATCH ?
+                WHERE {where_sql}
                 ORDER BY rank, f.chunk_id
                 LIMIT ?
                 """,
-                (fts_query, top_k),
+                parameters,
             ).fetchall()
 
         results = []
@@ -59,6 +83,10 @@ class SQLiteKeywordIndex:
                         "document_id": row["document_id"],
                         "section_title": row["section_title"],
                         "status": row["status"],
+                        "document_family_id": row["document_family_id"],
+                        "entity": row["entity"],
+                        "document_type": row["document_type"],
+                        "document_date": row["document_date"],
                         "chunk_index": row["chunk_index"],
                         "token_count": row["token_count"],
                     },

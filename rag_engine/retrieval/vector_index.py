@@ -75,23 +75,51 @@ class SQLiteVectorIndex:
 
         return int(row["total"])
 
-    def search(self, query_vector: list[float], top_k: int = 5) -> list[dict]:
+    def search(
+        self,
+        query_vector: list[float],
+        top_k: int = 5,
+        include_superseded: bool = False,
+        filters: dict[str, str] | None = None,
+    ) -> list[dict]:
+        filters = filters or {}
+        where_clauses = []
+        parameters: list[str] = []
+
+        if not include_superseded:
+            where_clauses.append("d.status != 'superseded'")
+
+        for column, value in filters.items():
+            where_clauses.append(f"d.{column} = ?")
+            parameters.append(value)
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                f"""
                 SELECT
                     ve.chunk_id,
                     ve.document_id,
                     ve.section_title,
-                    ve.status,
                     ve.vector_json,
+                    d.status,
+                    d.document_family_id,
+                    d.entity,
+                    d.document_type,
+                    d.document_date,
                     c.text,
                     c.chunk_index,
                     c.token_count
                 FROM vector_embeddings ve
                 JOIN chunks c ON c.chunk_id = ve.chunk_id
+                JOIN documents d ON d.id = ve.document_id
+                {where_sql}
                 ORDER BY ve.updated_at DESC, ve.chunk_id
-                """
+                """,
+                parameters,
             ).fetchall()
 
         scored = []
@@ -109,6 +137,10 @@ class SQLiteVectorIndex:
                         "document_id": row["document_id"],
                         "section_title": row["section_title"],
                         "status": row["status"],
+                        "document_family_id": row["document_family_id"],
+                        "entity": row["entity"],
+                        "document_type": row["document_type"],
+                        "document_date": row["document_date"],
                         "chunk_index": row["chunk_index"],
                         "token_count": row["token_count"],
                     },

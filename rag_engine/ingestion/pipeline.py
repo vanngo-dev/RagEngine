@@ -28,6 +28,10 @@ async def ingest_upload(
     file: UploadFile,
     settings: Settings,
     store: SQLiteDocumentStore,
+    entity: str | None = None,
+    document_type: str | None = None,
+    document_date: str | None = None,
+    document_family_id: str | None = None,
 ) -> dict:
     file_name = safe_file_name(file.filename or "uploaded_document")
     source_type = validate_supported_file(file_name)
@@ -55,7 +59,11 @@ async def ingest_upload(
         file_path=str(file_path),
         source_type=source_type,
         content_hash=digest,
-        status="uploaded",
+        status="active",
+        document_family_id=document_family_id or document_id,
+        entity=entity or "",
+        document_type=document_type or source_type,
+        document_date=document_date or "",
     )
 
     blocks = parse_document(file_name, content)
