@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     )
     raw_data_dir: Path = Field(default=Path("data/raw"), alias="RAW_DATA_DIR")
     chunk_max_tokens: int = Field(default=180, alias="CHUNK_MAX_TOKENS")
+    embedding_provider: str = Field(default="fake", alias="EMBEDDING_PROVIDER")
 
     model_config = SettingsConfigDict(
         env_file=".env",
