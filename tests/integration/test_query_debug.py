@@ -48,3 +48,6 @@ def test_debug_endpoint_includes_required_fields_with_mocked_llm(client: TestCli
     assert len(payload["prompt_preview"]) <= 1003
     assert payload["rerank_results"]
     assert payload["selected_evidence"]["primary_evidence"]
+    assert payload["structured_claims"]["claims"]
+    assert payload["verification"]["passed"] is True
+    assert payload["verification_attempts"] == 1

@@ -5,6 +5,7 @@ from rag_engine.generation.evidence import EvidenceSelector, flatten_selected_ev
 from rag_engine.generation.injection import detect_injection_warnings
 from rag_engine.generation.llm import LLMProvider
 from rag_engine.generation.prompts import PromptBuilder
+from rag_engine.generation.verified_answer import generate_verified_answer
 from rag_engine.retrieval.embeddings import EmbeddingProvider
 from rag_engine.retrieval.hybrid import hybrid_search
 from rag_engine.retrieval.keyword_index import SQLiteKeywordIndex
@@ -81,12 +82,16 @@ def debug_question(
             "prompt_preview": "",
             "answer": REFUSAL_ANSWER,
             "citations": [],
+            "structured_claims": {"claims": []},
+            "verification": {"passed": False, "claim_results": []},
+            "verification_attempts": 0,
         }
 
     context_payload = ContextBuilder().build(selected_results[:top_k])
     injection_warnings = detect_injection_warnings(context_payload["sources"])
     prompt = PromptBuilder().build(question, context_payload["context"])
-    answer = llm_provider.generate(prompt)
+    verified = generate_verified_answer(prompt, context_payload["sources"], llm_provider)
+    answer = verified["answer"]
     citations = extract_citations(answer, context_payload["sources"])
 
     return {
@@ -100,6 +105,10 @@ def debug_question(
         "prompt_preview": bounded_prompt_preview(prompt),
         "answer": answer,
         "citations": citations,
+        "structured_claims": verified["structured_claims"],
+        "verification": verified["verification"],
+        "verification_attempts": verified["verification_attempts"],
+        "refused_after_verification": verified["refused_after_verification"],
     }
 
 
