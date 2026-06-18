@@ -1,10 +1,60 @@
 # Robust Local RAG Engine
 
+Local-first RAG engine built one vertical slice at a time.
+
+## Current Slice
+
+Slice 00 creates the project foundation:
+
+- FastAPI application entry point
+- application config
+- structured logging
+- `/health` endpoint
+- pytest setup
+- base package folders
+- phase documentation
+
+RAG ingestion, retrieval, answering, verification, and UI features are intentionally not implemented yet.
+
+## Setup
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+## Run
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Health check:
+
+```powershell
+curl http://localhost:8000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "service": "rag-engine",
+  "version": "0.1.0"
+}
+```
+
+## Test
+
+```powershell
+pytest
+```
+
 ## Codex Vertical Slice Workflow
 
-This repository is set up for phase-gated Codex implementation of the robust local RAG engine v3. The engine itself has not been implemented yet; each future Codex run should implement exactly one vertical slice.
-
-### Generate an Active Prompt
+Generate an active prompt:
 
 ```powershell
 .\scripts\run_slice.ps1 `
@@ -14,13 +64,13 @@ This repository is set up for phase-gated Codex implementation of the robust loc
 
 Then paste `docs/codex/ACTIVE_PROMPT.md` into Codex.
 
-### Run Gate
+Run the gate:
 
 ```powershell
 .\scripts\run_gate.ps1 -Slice "slice-00"
 ```
 
-### Commit Slice
+Commit the slice:
 
 ```powershell
 .\scripts\commit_slice.ps1 `
