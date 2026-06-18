@@ -48,6 +48,8 @@ def run_lightweight_eval(
     vector_scores = []
     keyword_scores = []
     hybrid_scores = []
+    false_confidence_cases = 0
+    no_answer_cases = 0
     for record in records:
         top_k = int(record.get("top_k", 5))
         query_vector = provider.embed_text(record["question"])
@@ -70,6 +72,10 @@ def run_lightweight_eval(
         hybrid_scores.append(
             recall_at_k([result["chunk_id"] for result in hybrid_results], expected_ids, top_k)
         )
+        if record.get("should_refuse", False):
+            no_answer_cases += 1
+            if hybrid_results and hybrid_results[0].get("score", 0.0) > 0.35:
+                false_confidence_cases += 1
 
     vector_recall = average(vector_scores)
     keyword_recall = average(keyword_scores)
@@ -81,6 +87,9 @@ def run_lightweight_eval(
         "vector_recall_at_k": vector_recall,
         "keyword_recall_at_k": keyword_recall,
         "hybrid_recall_at_k": hybrid_recall,
+        "false_confidence_rate": (
+            false_confidence_cases / no_answer_cases if no_answer_cases else 0.0
+        ),
     }
 
     if save_result:

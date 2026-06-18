@@ -11,6 +11,7 @@ from rag_engine.retrieval.hybrid import hybrid_search
 from rag_engine.retrieval.keyword_index import SQLiteKeywordIndex
 from rag_engine.retrieval.reranker import RerankerProvider, rerank_candidates
 from rag_engine.retrieval.vector_index import SQLiteVectorIndex
+from rag_engine.verification.confidence import ConfidenceScorer, apply_refusal_policy
 
 
 REFUSAL_ANSWER = "I do not have enough evidence to answer that question."
@@ -39,6 +40,10 @@ def answer_question(
     return {
         "answer": trace["answer"],
         "citations": trace["citations"],
+        "confidence": trace["confidence"],
+        "confidence_label": trace["confidence_label"],
+        "refusal": trace["refusal"],
+        "missing_information": trace["missing_information"],
     }
 
 
@@ -71,7 +76,7 @@ def debug_question(
         selected_results = flatten_selected_evidence(selected_evidence)
 
     if not selected_results or selected_results[0]["score"] <= 0:
-        return {
+        trace = {
             "question": question,
             "vector_results": vector_results,
             "hybrid_results": hybrid_results,
@@ -86,6 +91,9 @@ def debug_question(
             "verification": {"passed": False, "claim_results": []},
             "verification_attempts": 0,
         }
+        confidence = ConfidenceScorer().score(trace)
+        trace.update(confidence)
+        return trace
 
     context_payload = ContextBuilder().build(selected_results[:top_k])
     injection_warnings = detect_injection_warnings(context_payload["sources"])
@@ -94,7 +102,7 @@ def debug_question(
     answer = verified["answer"]
     citations = extract_citations(answer, context_payload["sources"])
 
-    return {
+    trace = {
         "question": question,
         "vector_results": vector_results,
         "hybrid_results": hybrid_results,
@@ -110,6 +118,10 @@ def debug_question(
         "verification_attempts": verified["verification_attempts"],
         "refused_after_verification": verified["refused_after_verification"],
     }
+    confidence = ConfidenceScorer().score(trace)
+    trace = apply_refusal_policy(trace, confidence)
+    trace.update(confidence)
+    return trace
 
 
 def bounded_prompt_preview(prompt: str, limit: int = 1000) -> str:

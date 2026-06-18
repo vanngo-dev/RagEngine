@@ -51,3 +51,4 @@ def test_debug_endpoint_includes_required_fields_with_mocked_llm(client: TestCli
     assert payload["structured_claims"]["claims"]
     assert payload["verification"]["passed"] is True
     assert payload["verification_attempts"] == 1
+    assert payload["confidence_signals"]["positive"]

@@ -8,3 +8,5 @@
 {"id":"q008","question":"What document talks about local retrieval?","expected_chunk_ids":["example_chunk_008"],"top_k":5}
 {"id":"q009","question":"What evidence supports the answer?","expected_chunk_ids":["example_chunk_009"],"top_k":5}
 {"id":"q010","question":"Which chunk should answer a basic summary question?","expected_chunk_ids":["example_chunk_010"],"top_k":5}
+{"id":"q011","question":"Question not supported by the corpus","expected_chunk_ids":[],"top_k":5,"should_refuse":true}
+{"id":"q012","question":"What unsupported external fact is true?","expected_chunk_ids":[],"top_k":5,"should_refuse":true}
