@@ -25,5 +25,8 @@ def test_eval_score_is_reproducible_and_result_file_is_created(tmp_path) -> None
     result_file = results_dir / "lightweight_eval_latest.json"
     assert first == second
     assert first["recall_at_k"] == 0.0
+    assert first["vector_recall_at_k"] == 0.0
+    assert first["keyword_recall_at_k"] == 0.0
+    assert first["hybrid_recall_at_k"] == 0.0
     assert result_file.exists()
     assert json.loads(result_file.read_text(encoding="utf-8")) == second

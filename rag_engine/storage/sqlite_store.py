@@ -50,6 +50,16 @@ class SQLiteDocumentStore:
                 )
                 """
             )
+            connection.execute(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS chunk_fts
+                USING fts5(
+                    chunk_id UNINDEXED,
+                    document_id UNINDEXED,
+                    text
+                )
+                """
+            )
             connection.commit()
 
     def create_document(
@@ -111,6 +121,20 @@ class SQLiteDocumentStore:
                         chunk["section_title"],
                         chunk["chunk_index"],
                         chunk["token_count"],
+                    )
+                    for chunk in chunks
+                ],
+            )
+            connection.executemany(
+                """
+                INSERT INTO chunk_fts (chunk_id, document_id, text)
+                VALUES (?, ?, ?)
+                """,
+                [
+                    (
+                        chunk["chunk_id"],
+                        chunk["document_id"],
+                        chunk["text"],
                     )
                     for chunk in chunks
                 ],

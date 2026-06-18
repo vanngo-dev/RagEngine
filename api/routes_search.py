@@ -1,9 +1,14 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from app.dependencies import get_app_embedding_provider, get_app_settings
 from app.config import Settings
+from app.dependencies import (
+    get_app_embedding_provider,
+    get_app_settings,
+)
 from rag_engine.retrieval.embeddings import EmbeddingProvider
+from rag_engine.retrieval.hybrid import hybrid_search
+from rag_engine.retrieval.keyword_index import SQLiteKeywordIndex
 from rag_engine.retrieval.vector_index import SQLiteVectorIndex
 
 
@@ -19,6 +24,10 @@ def get_vector_index(settings: Settings = Depends(get_app_settings)) -> SQLiteVe
     return SQLiteVectorIndex(settings.database_path)
 
 
+def get_keyword_index(settings: Settings = Depends(get_app_settings)) -> SQLiteKeywordIndex:
+    return SQLiteKeywordIndex(settings.database_path)
+
+
 @router.post("/vector")
 def vector_search(
     request: VectorSearchRequest,
@@ -30,4 +39,36 @@ def vector_search(
         "query": request.query,
         "top_k": request.top_k,
         "results": vector_index.search(query_vector, top_k=request.top_k),
+    }
+
+
+@router.post("/keyword")
+def keyword_search(
+    request: VectorSearchRequest,
+    keyword_index: SQLiteKeywordIndex = Depends(get_keyword_index),
+) -> dict:
+    return {
+        "query": request.query,
+        "top_k": request.top_k,
+        "results": keyword_index.search(request.query, top_k=request.top_k),
+    }
+
+
+@router.post("/hybrid")
+def hybrid_search_endpoint(
+    request: VectorSearchRequest,
+    vector_index: SQLiteVectorIndex = Depends(get_vector_index),
+    keyword_index: SQLiteKeywordIndex = Depends(get_keyword_index),
+    embedding_provider: EmbeddingProvider = Depends(get_app_embedding_provider),
+) -> dict:
+    return {
+        "query": request.query,
+        "top_k": request.top_k,
+        "results": hybrid_search(
+            query=request.query,
+            top_k=request.top_k,
+            vector_index=vector_index,
+            keyword_index=keyword_index,
+            embedding_provider=embedding_provider,
+        ),
     }
