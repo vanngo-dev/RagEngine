@@ -38,5 +38,8 @@ def format_source(source: Source) -> str:
         f"chunk_id: {source.chunk_id}\n"
         f"document_id: {source.document_id}\n"
         f"section: {source.section_title}\n"
-        f"text:\n{source.text}"
+        "text:\n"
+        "BEGIN UNTRUSTED SOURCE CONTENT\n"
+        f"{source.text}\n"
+        "END UNTRUSTED SOURCE CONTENT"
     )

@@ -2,6 +2,7 @@ import re
 
 from rag_engine.generation.context import ContextBuilder
 from rag_engine.generation.evidence import EvidenceSelector, flatten_selected_evidence
+from rag_engine.generation.injection import detect_injection_warnings
 from rag_engine.generation.llm import LLMProvider
 from rag_engine.generation.prompts import PromptBuilder
 from rag_engine.retrieval.embeddings import EmbeddingProvider
@@ -75,6 +76,7 @@ def debug_question(
             "hybrid_results": hybrid_results,
             "rerank_results": rerank_results,
             "selected_evidence": selected_evidence,
+            "injection_warnings": [],
             "selected_context": "",
             "prompt_preview": "",
             "answer": REFUSAL_ANSWER,
@@ -82,6 +84,7 @@ def debug_question(
         }
 
     context_payload = ContextBuilder().build(selected_results[:top_k])
+    injection_warnings = detect_injection_warnings(context_payload["sources"])
     prompt = PromptBuilder().build(question, context_payload["context"])
     answer = llm_provider.generate(prompt)
     citations = extract_citations(answer, context_payload["sources"])
@@ -92,6 +95,7 @@ def debug_question(
         "hybrid_results": hybrid_results,
         "rerank_results": rerank_results,
         "selected_evidence": selected_evidence,
+        "injection_warnings": injection_warnings,
         "selected_context": context_payload["context"],
         "prompt_preview": bounded_prompt_preview(prompt),
         "answer": answer,

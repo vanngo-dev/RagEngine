@@ -17,7 +17,8 @@ class MockLLMProvider(LLMProvider):
             return "I do not have enough evidence to answer that question."
 
         source_id = match.group(1)
-        source_text = " ".join(match.group(2).split())
+        source_text = extract_untrusted_source_text(match.group(2))
+        source_text = " ".join(source_text.split())
         first_sentence = source_text.split(".")[0].strip()
         if not first_sentence:
             return "I do not have enough evidence to answer that question."
@@ -63,3 +64,13 @@ def get_llm_provider(
         return OllamaLLMProvider(ollama_base_url, ollama_model)
 
     raise ValueError(f"Unknown LLM provider: {name}")
+
+
+def extract_untrusted_source_text(source_block: str) -> str:
+    start = "BEGIN UNTRUSTED SOURCE CONTENT"
+    end = "END UNTRUSTED SOURCE CONTENT"
+
+    if start in source_block and end in source_block:
+        return source_block.split(start, 1)[1].split(end, 1)[0].strip()
+
+    return source_block.strip()
