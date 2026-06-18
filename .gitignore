@@ -1,5 +1,13 @@
 .venv/
 .pytest_cache/
+.pytest_tmp/
 __pycache__/
 *.py[cod]
 .env
+*.db
+*.sqlite
+*.sqlite3
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
