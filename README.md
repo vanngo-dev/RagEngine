@@ -80,6 +80,7 @@ Main package areas:
 
 - `app/`: FastAPI application setup, config, dependencies, logging
 - `api/`: HTTP route modules
+- `frontend/`: shared React and TypeScript UI for web and future desktop wrapper
 - `rag_engine/ingestion/`: parsing, chunking, upload pipeline
 - `rag_engine/retrieval/`: embeddings, vector search, keyword search, hybrid search, reranking
 - `rag_engine/generation/`: context building, prompts, LLM providers, answer flow
@@ -102,11 +103,13 @@ The current implementation is a lightweight local backend:
 
 Production adapter interfaces and placeholders exist for future PostgreSQL, Qdrant, OpenSearch, and Redis-backed job storage. These are not full production implementations yet; selecting them raises a clear `NotImplementedError`.
 
+The project now includes a shared React web UI in `frontend/`. The UI connects to the FastAPI backend and is intended to be reused by the desktop shell rather than forked into a separate app.
+
 ## Current Project Status
 
-This is a LocalLite RAG Engine v0.1 backend.
+This is a LocalLite RAG Engine v0.1 backend with a shared web UI.
 
-It is not yet a full desktop or web product.
+It is not yet a full packaged desktop or production web product.
 
 The backend engine is slice-12 complete if tests pass.
 
@@ -133,11 +136,11 @@ The backend engine is slice-12 complete if tests pass.
 - Lightweight eval CLI
 - Full eval CLI with JSON reports and regression comparison support
 - LocalLite adapter factories and production placeholder adapters
+- Shared Vite React web UI for backend health, document upload, indexing, querying, citations, and debug traces
 - Slice phase documentation in `docs/youtube/`
 
 ## What Is Not Complete Yet
 
-- Polished web UI
 - Tauri desktop shell
 - Real PostgreSQL, Qdrant, OpenSearch, or Redis implementations
 - Packaged installer or release bundle
@@ -200,6 +203,37 @@ Default local URL:
 
 ```text
 http://127.0.0.1:8000
+```
+
+## Running the Web UI
+
+The web UI is a Vite React app under `frontend/`.
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+The UI defaults to:
+
+```text
+VITE_RAG_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Start the FastAPI backend first, then use the UI to check backend health, upload `.txt` or `.md` documents, list documents, view chunks, embed/index documents, ask questions, inspect citations, and view debug traces.
+
+Build the web UI:
+
+```powershell
+cd frontend
+npm run build
 ```
 
 ## Running Tests
@@ -282,6 +316,7 @@ curl.exe -X POST http://127.0.0.1:8000/query/debug `
 ```text
 app/          FastAPI app setup, settings, dependencies, logging
 api/          Route modules for health, documents, search, and query
+frontend/     Shared Vite React UI
 rag_engine/   Core ingestion, retrieval, generation, verification, eval, storage code
 tests/        Unit and integration tests
 docs/         Specifications, Codex slice prompts, and phase documentation
@@ -323,12 +358,13 @@ Useful scripts:
 | 10 | Confidence and refusal |
 | 11 | Full evaluation harness |
 | 12 | Production adapter interfaces |
+| 13A | Shared web UI |
 
-Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-12.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
+Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13A.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
 
 ## Roadmap
 
-- Slice 13A: Simple Web UI
+- Slice 13A: Shared Web UI
 - Slice 13B: Tauri Desktop UI
 - Slice 13C: Production database/vector/search adapters
 - Slice 13D: Packaging and release
