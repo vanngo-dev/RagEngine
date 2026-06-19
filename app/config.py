@@ -13,6 +13,24 @@ class Settings(BaseSettings):
     environment: str = Field(default="local", alias="ENVIRONMENT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     storage_profile: str = Field(default="local_lite", alias="STORAGE_PROFILE")
+    postgres_dsn: str = Field(
+        default="postgresql://rag:rag@localhost:5432/rag_engine",
+        alias="POSTGRES_DSN",
+    )
+    qdrant_url: str = Field(default="http://localhost:6333", alias="QDRANT_URL")
+    qdrant_collection: str = Field(
+        default="rag_chunks",
+        alias="QDRANT_COLLECTION",
+    )
+    opensearch_url: str = Field(
+        default="http://localhost:9200",
+        alias="OPENSEARCH_URL",
+    )
+    opensearch_index: str = Field(
+        default="rag_chunks",
+        alias="OPENSEARCH_INDEX",
+    )
+    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
     database_path: Path = Field(
         default=Path("data/processed/rag_engine.sqlite3"),
         alias="DATABASE_PATH",
