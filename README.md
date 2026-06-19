@@ -140,6 +140,7 @@ The backend engine is slice-12 complete if tests pass.
 - Production Docker Compose service stack and environment example
 - Shared Vite React web UI for backend health, document upload, indexing, querying, citations, and debug traces
 - Tauri desktop wrapper around the shared React UI
+- Local and production release verification scripts and docs
 - Slice phase documentation in `docs/youtube/`
 
 ## What Is Not Complete Yet
@@ -292,6 +293,38 @@ Production environment template:
 
 The production profile expects PostgreSQL, Qdrant, OpenSearch, and Redis. Adapter classes exist behind the storage factories, but they are skeletons until a future implementation completes real persistence and search behavior. See `docs/production.md`.
 
+## Release Workflow
+
+Local release commands:
+
+```powershell
+.\scripts\start_backend.ps1
+.\scripts\start_web_ui.ps1
+.\scripts\start_desktop_ui.ps1
+.\scripts\verify_local_release.ps1
+```
+
+Use skips for CI-style validation when the backend is not already running or Tauri build scripts are blocked by local machine policy:
+
+```powershell
+.\scripts\verify_local_release.ps1 -SkipTauriBuild -SkipHealthCheck
+```
+
+Production config verification:
+
+```powershell
+.\scripts\verify_production_config.ps1
+```
+
+Release branches:
+
+```text
+release/desktop-local = LocalLite plus shared web UI and Tauri desktop packaging
+release/online-prod = production Docker/server profile
+```
+
+`main` remains the shared source of truth. Release branches are targets, not separate products. See `docs/release.md` and `docs/BRANCHING_STRATEGY.md`.
+
 ## Running Tests
 
 ```powershell
@@ -417,8 +450,9 @@ Useful scripts:
 | 13A | Shared web UI |
 | 13B | Tauri desktop wrapper |
 | 13C | Production backend adapter skeletons |
+| 13D | Packaging and release workflow |
 
-Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13C.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
+Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13D.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
 
 ## Roadmap
 
@@ -432,6 +466,8 @@ Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/pha
 
 - LocalLite mode is intended for local development and single-user use.
 - Production adapters are skeletons, not full PostgreSQL, Qdrant, OpenSearch, or Redis implementations yet.
+- The desktop release does not bundle the FastAPI backend as a sidecar yet.
+- Local machine policy may block Tauri/Cargo build scripts.
 - Quality depends on eval coverage.
 - Large corpus aggregate questions may require a future map-reduce workflow.
 - Local LLM behavior depends on the available local model.
