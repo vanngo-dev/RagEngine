@@ -1,22 +1,188 @@
 # Robust Local RAG Engine
 
-Local-first RAG engine built one vertical slice at a time.
+## Overview
 
-## Current Slice
+Robust Local RAG Engine is a local-first backend for accurate, reliable, source-grounded answers from private documents. It is designed as an evidence system, not a generic chatbot.
 
-Slice 00 creates the project foundation:
+The engine is built to ingest documents, parse and chunk them, create searchable indexes, retrieve relevant evidence, generate cited answers, verify citations, refuse unsupported answers, run evaluations, and connect to a web or desktop UI later.
 
-- FastAPI application entry point
-- application config
-- structured logging
-- `/health` endpoint
-- pytest setup
-- base package folders
-- phase documentation
+## Project Goal
 
-RAG ingestion, retrieval, answering, verification, and UI features are intentionally not implemented yet.
+The goal is to build an evidence-based RAG engine that can become Pareto-frontier within a niche domain by combining clean document ingestion, strong metadata, hybrid retrieval, reranking, citation verification, confidence scoring, refusal behavior, and evaluation.
 
-## Setup
+This project is not trying to make a broad conversational assistant first. It builds the reliability layer that a useful assistant would depend on.
+
+## What Problem This Solves
+
+Common RAG systems often fail because they produce hallucinated answers, weak citations, stale-document answers, poor chunks, vector-only retrieval misses, no refusal behavior, no eval harness, and no debug trace.
+
+This engine addresses those problems by storing document metadata, separating raw chunk text from contextualized embedding text, using vector plus keyword retrieval, applying hybrid RRF ranking, reranking evidence, verifying cited claims, checking numbers and dates, tracking confidence, refusing weak answers, and exposing debug/eval traces.
+
+## Core Philosophy
+
+Bad RAG says: "It sounds right."
+
+Better RAG says: "Here is an answer with sources."
+
+Reliable RAG says: "Here is the answer, the evidence, verified citations, confidence, limitations, and trace."
+
+## Key Features
+
+- Document upload for `.txt` and `.md`
+- SQLite document registry
+- Paragraph-aware chunking
+- Contextualized `embedding_text`
+- Vector retrieval
+- Keyword retrieval with SQLite FTS5
+- Hybrid retrieval with Reciprocal Rank Fusion
+- Query endpoint
+- Debug query endpoint
+- Citation support
+- Structured claims
+- Confidence and refusal fields
+- Lightweight and full evaluation harnesses
+- LocalLite implementation
+- Adapter interface preparation
+
+## Reliability Features
+
+- Source-grounded answers
+- Empty-context refusal
+- Prompt-injection defense for retrieved documents
+- Claim-level citation verification
+- Numeric and date checks
+- Metadata filtering
+- Active/superseded document lifecycle
+- Debug trace
+- Eval metrics
+- False-confidence awareness
+
+## Architecture
+
+```text
+Document Upload
+  -> Document Registry
+  -> Parser
+  -> Chunker
+  -> Embedding Pipeline
+  -> Vector Index
+  -> Keyword Index
+  -> Hybrid Retriever
+  -> Reranker / Evidence Selector
+  -> Context Builder
+  -> LLM Provider
+  -> Claim / Citation Verifier
+  -> Confidence / Refusal
+  -> Final Answer
+```
+
+Main package areas:
+
+- `app/`: FastAPI application setup, config, dependencies, logging
+- `api/`: HTTP route modules
+- `rag_engine/ingestion/`: parsing, chunking, upload pipeline
+- `rag_engine/retrieval/`: embeddings, vector search, keyword search, hybrid search, reranking
+- `rag_engine/generation/`: context building, prompts, LLM providers, answer flow
+- `rag_engine/verification/`: structured claims, citation verification, confidence scoring
+- `rag_engine/evals/`: lightweight and full eval runners
+- `rag_engine/storage/`: SQLite LocalLite storage and adapter factories
+
+## LocalLite Stack
+
+The current implementation is a lightweight local backend:
+
+- FastAPI
+- SQLite
+- SQLite FTS5
+- SQLite-backed local vector adapter
+- Deterministic fake embedding provider for tests
+- Mock LLM provider by default
+- Ollama-compatible LLM provider
+- Pytest
+
+Production adapter interfaces and placeholders exist for future PostgreSQL, Qdrant, OpenSearch, and Redis-backed job storage. These are not full production implementations yet; selecting them raises a clear `NotImplementedError`.
+
+## Current Project Status
+
+This is a LocalLite RAG Engine v0.1 backend.
+
+It is not yet a full desktop or web product.
+
+The backend engine is slice-12 complete if tests pass.
+
+## What Is Complete
+
+- FastAPI backend with `GET /health`
+- Upload and storage for `.txt` and `.md`
+- SQLite document and chunk storage
+- Document metadata fields and supersession
+- Chunk generation and contextualized embedding text
+- Deterministic fake embeddings for local tests
+- SQLite-backed vector index
+- SQLite FTS5 keyword index
+- Vector, keyword, and hybrid search endpoints
+- RRF-based hybrid retrieval
+- Reranker provider interface and mock reranker
+- Evidence selector with simple diversity and conflict flags
+- Query endpoint with cited answer generation
+- Debug endpoint with retrieval, prompt, evidence, warning, claim, verification, and confidence trace fields
+- Prompt-injection warning detection and untrusted source wrapper
+- Structured claim extraction
+- Citation, numeric, and date verification
+- Confidence scoring and refusal behavior
+- Lightweight eval CLI
+- Full eval CLI with JSON reports and regression comparison support
+- LocalLite adapter factories and production placeholder adapters
+- Slice phase documentation in `docs/youtube/`
+
+## What Is Not Complete Yet
+
+- Polished web UI
+- Tauri desktop shell
+- Real PostgreSQL, Qdrant, OpenSearch, or Redis implementations
+- Packaged installer or release bundle
+- Large-scale document ingestion hardening
+- Advanced aggregate or map-reduce RAG
+- Domain-specific adapter tuning
+- Production-grade auth, deployment, monitoring, and operations
+
+## API Overview
+
+Actual endpoints currently defined in `api/`:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `POST` | `/documents/upload` | Upload `.txt` or `.md` document |
+| `GET` | `/documents` | List documents |
+| `GET` | `/documents/{document_id}/chunks` | List chunks for a document |
+| `POST` | `/documents/{document_id}/supersede` | Mark a document superseded by another document |
+| `POST` | `/documents/{document_id}/embed` | Embed chunks for a document |
+| `POST` | `/search/vector` | Vector search |
+| `POST` | `/search/keyword` | Keyword search |
+| `POST` | `/search/hybrid` | Hybrid RRF search |
+| `POST` | `/query` | Generate a verified answer with confidence/refusal fields |
+| `POST` | `/query/debug` | Return query trace details |
+
+Search endpoints accept `query`, `top_k`, `include_superseded`, and optional metadata filters such as `entity`, `document_type`, `document_date`, and `document_family_id`.
+
+## End-to-End Workflow
+
+1. Upload a document.
+2. The document is stored and registered.
+3. Text is parsed and chunked.
+4. Chunks get contextualized embedding text.
+5. Chunks are indexed for vector and keyword retrieval.
+6. A user asks a question.
+7. The engine retrieves evidence.
+8. The engine builds source context.
+9. The engine generates a cited answer.
+10. The engine verifies claims and citations.
+11. The engine scores confidence and refuses if evidence is weak.
+
+## Running the Project
+
+Create and activate a virtual environment:
 
 ```powershell
 python -m venv .venv
@@ -24,56 +190,166 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## Run
+Start the API:
 
 ```powershell
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
+
+Default local URL:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Running Tests
+
+```powershell
+python -m pytest -q
+```
+
+A Starlette/FastAPI `TestClient` deprecation warning may appear in the current dependency set; tests can still pass.
+
+## Running Evaluation
+
+Lightweight eval:
+
+```powershell
+python -m rag_engine.evals.lightweight_eval
+```
+
+Full eval:
+
+```powershell
+python -m rag_engine.evals.run_full_eval
+```
+
+Eval reports are written under:
+
+```text
+data/evals/results/
+```
+
+## Example Usage
 
 Health check:
 
 ```powershell
-curl http://localhost:8000/health
+curl.exe http://127.0.0.1:8000/health
 ```
 
-Expected response:
-
-```json
-{
-  "status": "ok",
-  "service": "rag-engine",
-  "version": "0.1.0"
-}
-```
-
-## Test
+Upload a Markdown document:
 
 ```powershell
-pytest
+curl.exe -X POST http://127.0.0.1:8000/documents/upload `
+  -F "file=@sample.md" `
+  -F "entity=ExampleCo" `
+  -F "document_type=policy"
 ```
 
-## Codex Vertical Slice Workflow
-
-Generate an active prompt:
+Embed the uploaded document:
 
 ```powershell
-.\scripts\run_slice.ps1 `
-  -SliceId "slice-00" `
-  -SliceFile "docs/codex/slices/slice-00-project-foundation.md"
+curl.exe -X POST http://127.0.0.1:8000/documents/{document_id}/embed
 ```
 
-Then paste `docs/codex/ACTIVE_PROMPT.md` into Codex.
-
-Run the gate:
+Run hybrid search:
 
 ```powershell
+curl.exe -X POST http://127.0.0.1:8000/search/hybrid `
+  -H "Content-Type: application/json" `
+  -d "{\"query\":\"risk factors\",\"top_k\":5}"
+```
+
+Ask a question:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8000/query `
+  -H "Content-Type: application/json" `
+  -d "{\"question\":\"What does the document say?\",\"top_k\":5}"
+```
+
+Inspect a debug trace:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8000/query/debug `
+  -H "Content-Type: application/json" `
+  -d "{\"question\":\"What does the document say?\",\"top_k\":5}"
+```
+
+## Repository Structure
+
+```text
+app/          FastAPI app setup, settings, dependencies, logging
+api/          Route modules for health, documents, search, and query
+rag_engine/   Core ingestion, retrieval, generation, verification, eval, storage code
+tests/        Unit and integration tests
+docs/         Specifications, Codex slice prompts, and phase documentation
+data/         Local raw files, processed SQLite data, and eval datasets/results
+scripts/      Slice workflow, gate, and commit helper scripts
+```
+
+## Development Workflow
+
+Development is slice-gated:
+
+1. Each slice adds one vertical layer.
+2. Tests are required for every slice.
+3. The gate must pass before the next slice starts.
+4. Each passing slice is committed separately.
+
+Useful scripts:
+
+```powershell
+.\scripts\run_slice.ps1 -SliceId "slice-00" -SliceFile "docs/codex/slices/slice-00-project-foundation.md"
 .\scripts\run_gate.ps1 -Slice "slice-00"
+.\scripts\commit_slice.ps1 -Slice "slice-00" -Message "Slice 00: project foundation"
 ```
 
-Commit the slice:
+## Slice-Based Build History
 
-```powershell
-.\scripts\commit_slice.ps1 `
-  -Slice "slice-00" `
-  -Message "Slice 00: project foundation"
-```
+| Slice | Purpose |
+|---|---|
+| 00 | Project foundation |
+| 01 | Minimal document pipeline |
+| 02 | Searchable vector retrieval |
+| 03 | Grounded answers with citations |
+| 04 | Lightweight eval and debug trace |
+| 05 | Hybrid retrieval with RRF |
+| 06 | Metadata filters and supersession |
+| 07 | Reranker and evidence selector |
+| 08 | Prompt-injection defense |
+| 09 | Structured claims and citation verification |
+| 10 | Confidence and refusal |
+| 11 | Full evaluation harness |
+| 12 | Production adapter interfaces |
+
+Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-12.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
+
+## Roadmap
+
+- Slice 13A: Simple Web UI
+- Slice 13B: Tauri Desktop UI
+- Slice 13C: Production database/vector/search adapters
+- Slice 13D: Packaging and release
+- Slice 14: Domain adapter specialization
+
+## Known Limitations
+
+- LocalLite mode is intended for local development and single-user use.
+- Production adapters are placeholders.
+- Quality depends on eval coverage.
+- Large corpus aggregate questions may require a future map-reduce workflow.
+- Local LLM behavior depends on the available local model.
+- Current parsers support `.txt` and `.md`; richer document formats are future work.
+- The default providers are deterministic test-friendly providers, not tuned production models.
+
+## Why This Project Matters
+
+This project demonstrates reliable AI system design, RAG architecture, evaluation-driven development, local-first privacy, source-grounded answer generation, and phase-gated engineering.
+
+The important idea is that useful AI systems need more than a fluent model call. They need evidence retrieval, verification, refusal behavior, and traces that make answers inspectable.
+
+## License
+
+No license file is currently included. Add an explicit license before distributing or reusing this project outside its current private development context.
