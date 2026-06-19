@@ -1,0 +1,20 @@
+[package]
+name = "rag-engine-desktop"
+version = "0.1.0"
+description = "Desktop wrapper for the Robust Local RAG Engine shared UI"
+authors = ["RAG Engine Contributors"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "rag_engine_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"

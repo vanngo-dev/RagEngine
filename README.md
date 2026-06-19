@@ -137,11 +137,11 @@ The backend engine is slice-12 complete if tests pass.
 - Full eval CLI with JSON reports and regression comparison support
 - LocalLite adapter factories and production placeholder adapters
 - Shared Vite React web UI for backend health, document upload, indexing, querying, citations, and debug traces
+- Tauri desktop wrapper around the shared React UI
 - Slice phase documentation in `docs/youtube/`
 
 ## What Is Not Complete Yet
 
-- Tauri desktop shell
 - Real PostgreSQL, Qdrant, OpenSearch, or Redis implementations
 - Packaged installer or release bundle
 - Large-scale document ingestion hardening
@@ -235,6 +235,32 @@ Build the web UI:
 cd frontend
 npm run build
 ```
+
+## Running the Desktop UI
+
+The desktop app is a Tauri wrapper around the same React UI in `frontend/`. It does not contain a separate desktop UI.
+
+Start the backend manually:
+
+```powershell
+python -m uvicorn app.main:app --reload
+```
+
+Run the desktop shell:
+
+```powershell
+cd frontend
+npm run tauri:dev
+```
+
+Build the desktop shell when Rust and Tauri platform prerequisites are installed:
+
+```powershell
+cd frontend
+npm run tauri:build
+```
+
+The desktop app connects to `http://127.0.0.1:8000` by default and shows the same backend offline state as the web UI when FastAPI is not running.
 
 ## Running Tests
 
@@ -359,8 +385,9 @@ Useful scripts:
 | 11 | Full evaluation harness |
 | 12 | Production adapter interfaces |
 | 13A | Shared web UI |
+| 13B | Tauri desktop wrapper |
 
-Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13A.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
+Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13B.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
 
 ## Roadmap
 
