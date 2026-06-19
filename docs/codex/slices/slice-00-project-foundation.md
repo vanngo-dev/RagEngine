@@ -1,9 +1,10 @@
-@'
 # Slice 00 — Project Foundation
 
 ## Goal
 
 Create the base FastAPI project for the robust local RAG engine.
+
+This slice establishes the minimum runnable project skeleton that all later slices will build on.
 
 ## Build Only This
 
@@ -13,10 +14,16 @@ Create the base FastAPI project for the robust local RAG engine.
 - pytest setup
 - health endpoint
 - base folder structure
-- docs/youtube/phase-00.md
+- README
+- `docs/youtube/phase-00.md`
 
-## Required Folder Structure
+Do not build any RAG features in this slice.
 
+## Requirements
+
+Create the following folder structure if it does not already exist:
+
+```text
 app/
   main.py
   config.py
@@ -53,137 +60,98 @@ data/
   raw/
   processed/
   evals/
+```
 
-## Required Endpoint
+Implement the project foundation with these requirements:
 
+- Create `app/main.py` with a FastAPI application instance.
+- Create `app/config.py` for application settings.
+- Create `app/dependencies.py` for future dependency wiring, even if it is minimal now.
+- Create `api/routes_health.py` for the health route.
+- Register the health route in the FastAPI app.
+- Add basic structured logging that is safe for local development.
+- Add pytest configuration if the repository does not already have it.
+- Add or update `README.md` with setup, run, and test commands for this slice.
+- Keep implementation simple and local-only.
+
+## API Endpoints Required
+
+Implement:
+
+```http
 GET /health
+```
 
 Expected response:
 
+```json
 {
   "status": "ok",
   "service": "rag-engine",
   "version": "0.1.0"
 }
-
-## Requirements
-
-1. Create app/main.py.
-2. Create app/config.py using pydantic-settings.
-3. Create api/routes_health.py.
-4. Register the health route in the FastAPI app.
-5. Add basic structured logging.
-6. Add requirements.txt.
-7. Add pytest setup.
-8. Add unit test for config loading.
-9. Add integration test for /health.
-10. Add README.md with setup, run, and test commands.
-11. Add docs/youtube/phase-00.md.
-
-## Suggested Dependencies
-
-fastapi
-uvicorn
-pydantic
-pydantic-settings
-pytest
-httpx
-python-dotenv
+```
 
 ## Tests Required
 
+Create:
+
+```text
 tests/unit/test_config.py
 tests/integration/test_health.py
+```
 
 Tests must verify:
 
-- config loads
-- app imports successfully
-- GET /health returns 200
-- GET /health returns status = ok
-- service name is rag-engine
-- version exists
+- config loads successfully
+- the FastAPI app imports successfully
+- `GET /health` returns HTTP 200
+- `GET /health` returns `status: ok`
+- `GET /health` returns `service: rag-engine`
+- `GET /health` returns a `version` value
 
-## Manual Validation Commands
+## Manual Validation
 
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+Run:
+
+```bash
 uvicorn app.main:app --reload
 curl http://localhost:8000/health
 pytest
+```
 
-## YouTube Tutorial Documentation
+## YouTube Documentation
 
 Create:
 
+```text
 docs/youtube/phase-00.md
+```
 
-Include:
+The documentation must include:
 
-# Phase 00 — Project Foundation
-
-## Video Goal
-Set up the base FastAPI RAG engine project with config, logging, health endpoint, and tests.
-
-## Why This Matters
-Every later RAG slice needs a stable, testable foundation.
-
-## What We Build
-- FastAPI app
-- config
-- logging
-- health endpoint
-- pytest setup
-
-## Manual Demo
-Show the server running and /health returning status ok.
-
-## Test Commands
-pytest
-
-## Common Mistakes
-- Wrong Python environment
-- Uvicorn import path error
-- Missing dependency
-- Port already in use
-
-## Validation Checklist
-- App starts
-- /health returns 200
-- Tests pass
+- phase title: `Phase 00 — Project Foundation`
+- video goal
+- why this foundation matters
+- what is built in this slice
+- manual demo steps
+- test commands
+- common mistakes
+- validation checklist
 
 ## Acceptance Criteria
 
-- uvicorn app.main:app --reload starts successfully.
-- curl http://localhost:8000/health returns status ok.
-- pytest passes.
-- README.md exists.
-- docs/youtube/phase-00.md exists.
-- No RAG functionality is implemented yet.
-
-## Final Response Required
-
-At the end, report:
-
-1. Files created or modified.
-2. Tests added.
-3. Tests run.
-4. Manual validation commands.
-5. Known limitations.
-6. Recommended git commit message.
-
-Recommended commit message:
-
-Slice 00: project foundation
+- `uvicorn app.main:app --reload` starts successfully.
+- `curl http://localhost:8000/health` returns the expected JSON response.
+- `pytest` passes.
+- `README.md` exists and documents setup, run, and test commands.
+- `docs/youtube/phase-00.md` exists.
+- No document upload, parsing, embedding, retrieval, generation, verification, or UI behavior exists.
 
 ## Do Not Continue
 
-Do not implement document upload.
-Do not implement embeddings.
-Do not implement vector search.
-Do not implement LLM answering.
-Do not implement RAG yet.
-Do not implement UI.
-Stop after this slice.
-'@ | Set-Content -Encoding UTF8 docs\codex\slices\slice-00-project-foundation.md
+Stop after completing Slice 00.
+
+Do not implement document upload, embeddings, vector search, keyword search, LLM answering, RAG query endpoints, evaluation harnesses, production adapters, or UI.
+
+Do not implement any future slice.
