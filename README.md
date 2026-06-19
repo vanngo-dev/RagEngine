@@ -101,13 +101,13 @@ The current implementation is a lightweight local backend:
 - Ollama-compatible LLM provider
 - Pytest
 
-Production adapter interfaces and placeholders exist for future PostgreSQL, Qdrant, OpenSearch, and Redis-backed job storage. These are not full production implementations yet; selecting them raises a clear `NotImplementedError`.
+Production adapter skeletons exist for PostgreSQL, Qdrant, OpenSearch, and Redis-backed job storage behind `STORAGE_PROFILE=production`. These are not full production implementations yet; selecting production mode without optional dependencies raises a clear configuration error. LocalLite remains the default working profile.
 
 The project now includes a shared React web UI in `frontend/`. The UI connects to the FastAPI backend and is intended to be reused by the desktop shell rather than forked into a separate app.
 
 ## Current Project Status
 
-This is a LocalLite RAG Engine v0.1 backend with a shared web UI.
+This is a LocalLite RAG Engine v0.1 backend with a shared web UI, a Tauri desktop wrapper, and production adapter skeletons.
 
 It is not yet a full packaged desktop or production web product.
 
@@ -135,7 +135,9 @@ The backend engine is slice-12 complete if tests pass.
 - Confidence scoring and refusal behavior
 - Lightweight eval CLI
 - Full eval CLI with JSON reports and regression comparison support
-- LocalLite adapter factories and production placeholder adapters
+- LocalLite adapter factories and production adapter skeletons
+- Production profile configuration for PostgreSQL, Qdrant, OpenSearch, and Redis
+- Production Docker Compose service stack and environment example
 - Shared Vite React web UI for backend health, document upload, indexing, querying, citations, and debug traces
 - Tauri desktop wrapper around the shared React UI
 - Slice phase documentation in `docs/youtube/`
@@ -262,6 +264,34 @@ npm run tauri:build
 
 The desktop app connects to `http://127.0.0.1:8000` by default and shows the same backend offline state as the web UI when FastAPI is not running.
 
+## Production Profile
+
+LocalLite is still the default and complete runtime profile:
+
+```text
+STORAGE_PROFILE=local_lite
+```
+
+Production mode is prepared behind configuration:
+
+```text
+STORAGE_PROFILE=production
+```
+
+Production service configuration:
+
+```powershell
+docker compose -f docker-compose.production.yml config
+```
+
+Production environment template:
+
+```text
+.env.production.example
+```
+
+The production profile expects PostgreSQL, Qdrant, OpenSearch, and Redis. Adapter classes exist behind the storage factories, but they are skeletons until a future implementation completes real persistence and search behavior. See `docs/production.md`.
+
 ## Running Tests
 
 ```powershell
@@ -386,8 +416,9 @@ Useful scripts:
 | 12 | Production adapter interfaces |
 | 13A | Shared web UI |
 | 13B | Tauri desktop wrapper |
+| 13C | Production backend adapter skeletons |
 
-Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13B.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
+Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/phase-13C.md`. The broader v3 specification is in `docs/spec/RAG_ENGINE_V3.md`.
 
 ## Roadmap
 
@@ -400,7 +431,7 @@ Detailed phase notes are in `docs/youtube/phase-00.md` through `docs/youtube/pha
 ## Known Limitations
 
 - LocalLite mode is intended for local development and single-user use.
-- Production adapters are placeholders.
+- Production adapters are skeletons, not full PostgreSQL, Qdrant, OpenSearch, or Redis implementations yet.
 - Quality depends on eval coverage.
 - Large corpus aggregate questions may require a future map-reduce workflow.
 - Local LLM behavior depends on the available local model.

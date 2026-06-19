@@ -13,15 +13,40 @@ from rag_engine.interfaces import (
     VectorIndex,
 )
 from rag_engine.storage.factory import (
+    get_chunk_store_for_profile,
     get_document_store_for_profile,
     get_job_store_for_profile,
     get_keyword_index_for_profile,
     get_vector_index_for_profile,
 )
+from rag_engine.storage.placeholders import (
+    MissingProductionDependencyError,
+    OpenSearchKeywordIndex,
+    PostgresChunkStore,
+    PostgresDocumentStore,
+    QdrantVectorIndex,
+    RedisJobStore,
+)
 
 
 def test_storage_profile_loads_default_local_lite() -> None:
     assert Settings().storage_profile == "local_lite"
+
+
+def test_production_profile_config_loads() -> None:
+    settings = Settings(
+        storage_profile="production",
+        postgres_dsn="postgresql://rag:rag@postgres:5432/rag_engine",
+        qdrant_url="http://qdrant:6333",
+        opensearch_url="http://opensearch:9200",
+        redis_url="redis://redis:6379/0",
+    )
+
+    assert settings.storage_profile == "production"
+    assert settings.postgres_dsn.startswith("postgresql://")
+    assert settings.qdrant_url == "http://qdrant:6333"
+    assert settings.opensearch_url == "http://opensearch:9200"
+    assert settings.redis_url == "redis://redis:6379/0"
 
 
 def test_local_lite_still_works_through_interfaces(tmp_path) -> None:
@@ -40,18 +65,44 @@ def test_local_lite_still_works_through_interfaces(tmp_path) -> None:
     assert store.get_document("doc_interface")["title"] == "Interface"
 
 
-def test_placeholder_adapters_raise_clear_error(tmp_path) -> None:
-    with pytest.raises(NotImplementedError, match="postgres adapter is a placeholder"):
-        get_document_store_for_profile("postgres", tmp_path / "rag.sqlite3")
+def test_production_adapter_classes_exist() -> None:
+    assert PostgresDocumentStore
+    assert PostgresChunkStore
+    assert QdrantVectorIndex
+    assert OpenSearchKeywordIndex
+    assert RedisJobStore
 
-    with pytest.raises(NotImplementedError, match="qdrant adapter is a placeholder"):
-        get_vector_index_for_profile("qdrant", tmp_path / "rag.sqlite3")
 
-    with pytest.raises(NotImplementedError, match="opensearch adapter is a placeholder"):
-        get_keyword_index_for_profile("opensearch", tmp_path / "rag.sqlite3")
+def test_missing_production_dependency_gives_clear_error(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "rag_engine.storage.placeholders.importlib.util.find_spec",
+        lambda name: None,
+    )
 
-    with pytest.raises(NotImplementedError, match="redis_jobs adapter is a placeholder"):
-        get_job_store_for_profile("redis_jobs")
+    with pytest.raises(MissingProductionDependencyError, match="psycopg"):
+        PostgresDocumentStore()
+
+
+def test_production_profile_routes_to_adapter_skeletons(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        "rag_engine.storage.placeholders.importlib.util.find_spec",
+        lambda name: None,
+    )
+
+    with pytest.raises(MissingProductionDependencyError, match="PostgreSQL document store"):
+        get_document_store_for_profile("production", tmp_path / "rag.sqlite3")
+
+    with pytest.raises(MissingProductionDependencyError, match="PostgreSQL chunk store"):
+        get_chunk_store_for_profile("production", tmp_path / "rag.sqlite3")
+
+    with pytest.raises(MissingProductionDependencyError, match="Qdrant vector index"):
+        get_vector_index_for_profile("production", tmp_path / "rag.sqlite3")
+
+    with pytest.raises(MissingProductionDependencyError, match="OpenSearch keyword index"):
+        get_keyword_index_for_profile("production", tmp_path / "rag.sqlite3")
+
+    with pytest.raises(MissingProductionDependencyError, match="Redis job store"):
+        get_job_store_for_profile("production")
 
 
 def test_required_interface_names_exist() -> None:
