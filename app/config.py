@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     embedding_provider: str = Field(default="fake", alias="EMBEDDING_PROVIDER")
     llm_provider: str = Field(default="mock", alias="LLM_PROVIDER")
     reranker_provider: str = Field(default="mock", alias="RERANKER_PROVIDER")
+    cors_allowed_origins: list[str] = Field(
+        default=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        alias="CORS_ALLOWED_ORIGINS",
+    )
     ollama_base_url: str = Field(
         default="http://localhost:11434",
         alias="OLLAMA_BASE_URL",

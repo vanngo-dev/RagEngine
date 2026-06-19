@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes_documents import router as documents_router
 from api.routes_health import router as health_router
@@ -14,6 +15,14 @@ configure_logging(settings.log_level)
 app = FastAPI(
     title="Robust Local RAG Engine",
     version=settings.version,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 app.include_router(health_router)
