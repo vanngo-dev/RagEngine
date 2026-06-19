@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     version: str = Field(default="0.1.0", alias="SERVICE_VERSION")
     environment: str = Field(default="local", alias="ENVIRONMENT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    storage_profile: str = Field(default="local_lite", alias="STORAGE_PROFILE")
     database_path: Path = Field(
         default=Path("data/processed/rag_engine.sqlite3"),
         alias="DATABASE_PATH",

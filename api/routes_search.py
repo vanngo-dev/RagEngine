@@ -10,6 +10,10 @@ from rag_engine.retrieval.embeddings import EmbeddingProvider
 from rag_engine.retrieval.hybrid import hybrid_search
 from rag_engine.retrieval.keyword_index import SQLiteKeywordIndex
 from rag_engine.retrieval.vector_index import SQLiteVectorIndex
+from rag_engine.storage.factory import (
+    get_keyword_index_for_profile,
+    get_vector_index_for_profile,
+)
 
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -39,11 +43,11 @@ class VectorSearchRequest(BaseModel):
 
 
 def get_vector_index(settings: Settings = Depends(get_app_settings)) -> SQLiteVectorIndex:
-    return SQLiteVectorIndex(settings.database_path)
+    return get_vector_index_for_profile(settings.storage_profile, settings.database_path)
 
 
 def get_keyword_index(settings: Settings = Depends(get_app_settings)) -> SQLiteKeywordIndex:
-    return SQLiteKeywordIndex(settings.database_path)
+    return get_keyword_index_for_profile(settings.storage_profile, settings.database_path)
 
 
 @router.post("/vector")

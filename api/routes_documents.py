@@ -7,6 +7,10 @@ from rag_engine.ingestion.pipeline import ingest_upload
 from rag_engine.retrieval.embeddings import EmbeddingProvider
 from rag_engine.retrieval.indexing import embed_document
 from rag_engine.retrieval.vector_index import SQLiteVectorIndex
+from rag_engine.storage.factory import (
+    get_document_store_for_profile,
+    get_vector_index_for_profile,
+)
 from rag_engine.storage.sqlite_store import SQLiteDocumentStore
 
 
@@ -14,11 +18,11 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 def get_store(settings: Settings = Depends(get_app_settings)) -> SQLiteDocumentStore:
-    return SQLiteDocumentStore(settings.database_path)
+    return get_document_store_for_profile(settings.storage_profile, settings.database_path)
 
 
 def get_vector_index(settings: Settings = Depends(get_app_settings)) -> SQLiteVectorIndex:
-    return SQLiteVectorIndex(settings.database_path)
+    return get_vector_index_for_profile(settings.storage_profile, settings.database_path)
 
 
 @router.post("/upload")
